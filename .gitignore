@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+*.manifest
+*.spec
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Build outputs
+dist/
+build/
+.parcel-cache/
+.next/
+out/
+
+# Logs
+*.log
+logs/
+
+# Editor directories and files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+
+# Project specific
+backend/venv/
+backend/__pycache__/
+backend/VITON-HD/results/
+backend/VITON-HD/datasets/single_test/test/
+backend/VITON-HD/datasets/single_test/openpose-json/
+backend/VITON-HD/datasets/single_test/openpose-img/
+backend/VITON-HD/datasets/single_test/image/
+backend/VITON-HD/datasets/single_test/image-parse/
+
