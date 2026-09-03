@@ -15,7 +15,12 @@ model = CLIPModel.from_pretrained(model_id).to(device)
 processor = AutoProcessor.from_pretrained(model_id)
 
 # Pinecone API Key and config
-PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY", "***REMOVED***")
+PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
+if not PINECONE_API_KEY:
+    raise RuntimeError(
+        "PINECONE_API_KEY is not set. Copy backend/.env.example to backend/.env "
+        "and add your key (get one at https://app.pinecone.io)."
+    )
 
 # Initialize Pinecone with error handling
 try:

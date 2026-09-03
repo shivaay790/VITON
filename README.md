@@ -1,4 +1,4 @@
-# ezyZip Virtual Try-On Platform
+# VITON — AI-Assisted Virtual Try-On Platform
 
 End-to-end prototype for an AI-assisted fashion shopping experience. The project combines a Vite + React frontend with a FastAPI backend that serves dataset assets, powers a multiplayer styling game, and runs VITON-HD for virtual garment try-on.
 
@@ -8,6 +8,17 @@ End-to-end prototype for an AI-assisted fashion shopping experience. The project
 - Styling game mode with round-based scoring, leaderboards, and real-time picks.
 - Semantic or fallback search for garments (Pinecone optional).
 - Chatbot and designer studio panels prepared for future AI integrations.
+
+## 🔑 Environment & Secrets
+
+Both halves of the app read their configuration from `.env` files, which are gitignored:
+
+| File | Variable | Purpose |
+| --- | --- | --- |
+| `backend/.env` | `PINECONE_API_KEY` | Semantic garment search ([app.pinecone.io](https://app.pinecone.io)) |
+| `frontend/.env` | `VITE_API_URL` | Base URL of the backend (defaults to `http://localhost:8000`) |
+
+Copy the matching `.env.example` in each directory and fill in your own values. Never commit a real `.env`.
 
 ## Project Structure
 - `frontend/` — React 18 + TypeScript app (Vite, Tailwind, lucide-react) providing the UI, tabs, and API client.
@@ -23,15 +34,15 @@ End-to-end prototype for an AI-assisted fashion shopping experience. The project
 
 ## Backend Setup
 ```powershell
-cd ezyZip\backend
+cd backend
 python -m venv venv
 venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Optional: configure environment
-copy .env.example .env  # create one if not present
-# set PINECONE_API_KEY=... and any other secrets
+# Configure environment (required)
+copy .env.example .env      # macOS/Linux: cp .env.example .env
+# then edit .env and set PINECONE_API_KEY
 
 uvicorn main:app --reload --port 8000
 ```
@@ -43,13 +54,18 @@ Notes:
 
 ## Frontend Setup
 ```powershell
-cd ezyZip\frontend
+cd frontend
 npm install
+
+copy .env.example .env      # macOS/Linux: cp .env.example .env
+# VITE_API_URL defaults to http://localhost:8000 - change it to point at a deployed backend
+
 npm run dev
 # Vite serves on http://localhost:5173 by default
 ```
 
-The frontend reads backend status from `http://localhost:8000/api/ping` and expects garment assets at `/clothes/{filename}` and people assets at `/people/{filename}`.
+The backend URL lives in one place, `frontend/src/config.ts`, which reads `VITE_API_URL`.
+The frontend reads backend status from `${VITE_API_URL}/api/ping` and expects garment assets at `/clothes/{filename}` and people assets at `/people/{filename}`.
 
 ## Key API Endpoints
 - `POST /start_game` — initialize multiplayer styling session.

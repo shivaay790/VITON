@@ -4,6 +4,7 @@ import { Product } from '../types';
 import { api } from '../utils/api';
 import { ProductTile } from './ProductTile';
 import { FilterSidebar } from './FilterSidebar';
+import { BACKEND_URL } from "../config";
 
 interface ShopProps {
   onTryOn: (product: Product) => void;
@@ -17,7 +18,7 @@ function filenameToProduct(filename: string): Product {
   return {
     id: filename,
     title: filename,
-    image: `http://localhost:8000/clothes/${filename}`,
+    image: `${BACKEND_URL}/clothes/${filename}`,
     price: 0,
     category: 'tops',
     company: brand,

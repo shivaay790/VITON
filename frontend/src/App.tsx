@@ -10,12 +10,13 @@ import { StyleGame } from './components/StyleGame';
 import { Cart } from './components/Cart';
 import { Product } from './types';
 import { api } from './utils/api';
+import { BACKEND_URL } from "./config";
 
 function filenameToProduct(filename: string): Product {
   return {
     id: filename,
     title: filename, // or a nicer name if you want to parse it
-    image: `http://localhost:8000/clothes/${filename}`,
+    image: `${BACKEND_URL}/clothes/${filename}`,
     price: 0, // or any default/mock value
     category: 'tops', // if you want
     company: 'Dataset', // or any default

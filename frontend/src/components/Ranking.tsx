@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-
-const BACKEND_URL = "http://localhost:8000";
-
+import { BACKEND_URL } from "../config";
 interface VitonResult {
   player: string;
   cloth: string;

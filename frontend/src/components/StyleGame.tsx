@@ -6,9 +6,7 @@ import Timer from './Timer';
 import ClothesGrid from './ClothesGrid';
 import Ranking from './Ranking';
 import Leaderboard from './Leaderboard';
-
-const BACKEND_URL = "http://localhost:8000";
-
+import { BACKEND_URL } from "../config";
 // Fixed players for the VITON game (now handled by backend)
 // const FIXED_PLAYERS = ['00002_00', '14684_00', '00154_00'];
 

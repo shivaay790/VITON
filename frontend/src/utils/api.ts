@@ -1,16 +1,17 @@
 import { Product } from '../types';
+import { BACKEND_URL } from "../config";
 
 // Mock API functions
 export const api = {
   async recommend(top_k: number = 4): Promise<Product[]> {
-    const res = await fetch(`http://localhost:8000/recommend?top_k=${top_k}`);
+    const res = await fetch(`${BACKEND_URL}/recommend?top_k=${top_k}`);
     if (!res.ok) throw new Error('Failed to fetch recommendations');
     const data = await res.json();
     // Convert image URLs to Product objects
     return data.images.map((url: string) => ({
       id: url,
       title: url.split('/').pop() || '',
-      image: `http://localhost:8000${url}`,
+      image: `${BACKEND_URL}${url}`,
       price: 0,
       category: 'tops',
       company: 'Dataset',
@@ -35,7 +36,7 @@ export const api = {
     if (params.color) query.append('color', params.color);
     if (params.company) query.append('company', params.company);
     if (params.priceMax) query.append('priceMax', params.priceMax.toString());
-    const res = await fetch(`http://localhost:8000/clothes_list?${query.toString()}`);
+    const res = await fetch(`${BACKEND_URL}/clothes_list?${query.toString()}`);
     if (!res.ok) throw new Error('Failed to filter tops');
     const data = await res.json();
     return data.clothes;
@@ -50,7 +51,7 @@ export const api = {
     if (cloth) {
       formData.append('cloth', cloth);
     }
-    const res = await fetch('http://localhost:8000/viton_preview_upload', {
+    const res = await fetch(`${BACKEND_URL}/viton_preview_upload`, {
       method: 'POST',
       body: formData,
     });
@@ -60,7 +61,7 @@ export const api = {
   },
 
   async design(prompt: string): Promise<string> {
-    const res = await fetch('http://localhost:8000/design', {
+    const res = await fetch(`${BACKEND_URL}/design`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(prompt),
@@ -71,7 +72,7 @@ export const api = {
   },
 
   async getTops({ session_id = 'store', page = 1, pageSize = 50 } = {} as { session_id?: string; page?: number; pageSize?: number }): Promise<string[]> {
-    const url = `http://localhost:8000/clothes_list?session_id=${session_id}&page=${page}&page_size=${pageSize}`;
+    const url = `${BACKEND_URL}/clothes_list?session_id=${session_id}&page=${page}&page_size=${pageSize}`;
     console.log('🔍 Frontend getTops request:', { session_id, page, pageSize });
     console.log('🔍 Making request to:', url);
     
@@ -102,7 +103,7 @@ export const api = {
     const query = new URLSearchParams();
     if (combinedQuery) query.append('query', combinedQuery);
     
-    const url = `http://localhost:8000/search_clothes?${query.toString()}`;
+    const url = `${BACKEND_URL}/search_clothes?${query.toString()}`;
     console.log('🔍 Making request to:', url);
     
     const res = await fetch(url);
@@ -117,13 +118,13 @@ export const api = {
   },
 
   async ping(): Promise<{ message: string }> {
-    const res = await fetch('http://localhost:8000/api/ping');
+    const res = await fetch(`${BACKEND_URL}/api/ping`);
     if (!res.ok) throw new Error('Backend not reachable');
     return res.json();
   },
 
   async startGame({ num_players, num_rounds, timer, n_clothes = 10 }: { num_players: number; num_rounds: number; timer: number; n_clothes?: number }) {
-    const res = await fetch('http://localhost:8000/start_game', {
+    const res = await fetch(`${BACKEND_URL}/start_game`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ num_players, num_rounds, timer, n_clothes }),
@@ -133,7 +134,7 @@ export const api = {
   },
 
   async pick({ session_id, round_num, player, picks }: { session_id: string; round_num: number; player: string; picks: any }) {
-    const res = await fetch('http://localhost:8000/pick', {
+    const res = await fetch(`${BACKEND_URL}/pick`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id, round_num, player, picks }),
@@ -143,7 +144,7 @@ export const api = {
   },
 
   async rank({ session_id, round_num, player, ranking }: { session_id: string; round_num: number; player: string; ranking: any }) {
-    const res = await fetch('http://localhost:8000/rank', {
+    const res = await fetch(`${BACKEND_URL}/rank`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id, round_num, player, ranking }),
@@ -153,7 +154,7 @@ export const api = {
   },
 
   async getLeaderboard(session_id: string) {
-    const res = await fetch(`http://localhost:8000/leaderboard?session_id=${encodeURIComponent(session_id)}`);
+    const res = await fetch(`${BACKEND_URL}/leaderboard?session_id=${encodeURIComponent(session_id)}`);
     if (!res.ok) throw new Error('Failed to fetch leaderboard');
     return res.json();
   },
@@ -164,7 +165,7 @@ export const api = {
       round_num: String(round_num),
       player
     });
-    const res = await fetch(`http://localhost:8000/received_clothes?${params.toString()}`);
+    const res = await fetch(`${BACKEND_URL}/received_clothes?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch received clothes');
     return res.json();
   },
@@ -175,13 +176,13 @@ export const api = {
       round_num: String(round_num),
       target_player
     });
-    const res = await fetch(`http://localhost:8000/available_clothes?${params.toString()}`);
+    const res = await fetch(`${BACKEND_URL}/available_clothes?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch available clothes');
     return res.json();
   },
 
   async getDetailedLeaderboard(session_id: string) {
-    const res = await fetch(`http://localhost:8000/detailed_leaderboard?session_id=${encodeURIComponent(session_id)}`);
+    const res = await fetch(`${BACKEND_URL}/detailed_leaderboard?session_id=${encodeURIComponent(session_id)}`);
     if (!res.ok) throw new Error('Failed to fetch detailed leaderboard');
     return res.json();
   }

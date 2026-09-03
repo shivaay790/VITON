@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import Timer from './Timer';
-
-const BACKEND_URL = "http://localhost:8000";
-
+import { BACKEND_URL } from "../config";
 interface ClothesGridProps {
   sessionId: string;
   players: string[];
