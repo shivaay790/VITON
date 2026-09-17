@@ -36,6 +36,11 @@ BACKGROUND_TOLERANCE = 20
 PERSON_TOLERANCE = 40
 # VITON framing: the person fills the frame from just above the head down.
 HEAD_MARGIN = 0.05
+# Only reframe when at least this share of the photo's height is empty above
+# the person. Catalogue photos have the head near the top edge.
+MIN_SPACE_ABOVE = 0.15
+# Foreground regions smaller than this share of the image are specks, not the person.
+MIN_REGION_SHARE = 0.002
 
 
 def _to_model_tensor(image: Image.Image) -> torch.Tensor:
@@ -75,24 +80,44 @@ def estimate_garment_mask(cloth: Image.Image) -> Image.Image:
     return Image.fromarray((garment * 255).astype(np.uint8), mode="L")
 
 
+def _background_by_row(array: np.ndarray, band: int = 20, smooth: int = 101) -> np.ndarray:
+    """Wall colour for each row, from the left and right edges of the photo.
+
+    A real wall is lit unevenly, usually brighter at the top. Against one
+    global background colour the bright upper wall reads as foreground.
+    Taking each row's colour from its own edges, smoothed down the image so an
+    arm touching the edge does not skew it, follows the gradient instead.
+    """
+    edges = np.concatenate([array[:, :band], array[:, -band:]], axis=1)
+    rows = np.median(edges, axis=1)
+    rows = ndimage.median_filter(rows, size=(min(smooth, len(rows)), 1), mode="nearest")
+    return rows[:, None, :]
+
+
 def _person_box(image: Image.Image) -> tuple[int, int, int, int] | None:
     """Bounding box of the person in a photo taken against a plain background.
 
-    Returns None when no single clear foreground region is found, for example
-    on a busy background, in which case the photo is used as framed.
+    Takes every sizeable foreground region, not just the largest. A white top
+    on a white wall is invisible to this, and with only the largest region the
+    box shrank to the jeans and the photo was cropped to the hips. With all
+    regions the hair and face still anchor the top of the box.
+
+    Returns None when no clear foreground is found, for example on a busy
+    background, in which case the photo is used as framed.
     """
     array = np.asarray(image, dtype=np.int16)
-    foreground = np.abs(array - _border_colour(array)).max(axis=2) > PERSON_TOLERANCE
+    foreground = np.abs(array - _background_by_row(array)).max(axis=2) > PERSON_TOLERANCE
     foreground = ndimage.binary_opening(foreground, iterations=2)
     labels, count = ndimage.label(foreground)
     if count == 0:
         return None
     sizes = ndimage.sum(foreground, labels, index=range(1, count + 1))
-    largest = labels == (int(np.argmax(sizes)) + 1)
-    share = largest.mean()
-    if share < 0.03 or share > 0.9:
+    keep = np.flatnonzero(sizes >= MIN_REGION_SHARE * foreground.size) + 1
+    person = np.isin(labels, keep)
+    share = person.mean()
+    if keep.size == 0 or share < 0.03 or share > 0.9:
         return None
-    rows, cols = np.where(largest.any(axis=1))[0], np.where(largest.any(axis=0))[0]
+    rows, cols = np.where(person.any(axis=1))[0], np.where(person.any(axis=0))[0]
     return int(cols[0]), int(rows[0]), int(cols[-1]) + 1, int(rows[-1]) + 1
 
 
@@ -101,8 +126,10 @@ def _frame_person(image: Image.Image) -> Image.Image:
 
     DM-VTON was trained on catalogue shots where the person fills the frame.
     Given a photo with a lot of wall around the person it places the garment
-    where it expects a torso, which lands it over the face. So when the person
-    is clearly smaller than the frame they are cropped to that framing first.
+    where it expects a torso, which lands it over the face. So when there is
+    clearly empty space above the person and they are clearly smaller than the
+    frame, they are cropped to that framing first. Every doubtful case is left
+    as it is: a wrong crop is far worse than no crop.
     Padding uses the photo's own border colour, never stretching, since
     stretching changes body proportions in the output.
     """
@@ -114,7 +141,7 @@ def _frame_person(image: Image.Image) -> Image.Image:
         left, top, right, bottom = box
         crop_h = (bottom - top) / (1 - HEAD_MARGIN)
         crop_h = max(crop_h, (right - left) / ratio / 0.9)
-        if crop_h < 0.85 * height:
+        if top > MIN_SPACE_ABOVE * height and crop_h < 0.85 * height:
             crop_w = crop_h * ratio
             centre = (left + right) / 2
             x0 = round(centre - crop_w / 2)

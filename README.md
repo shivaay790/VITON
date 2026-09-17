@@ -107,7 +107,7 @@ Bare filenames are looked up in the dataset.
 `backend/feature_2_VITON_model/dmvton_service.py` wraps DM-VTON for the API.
 
 1. **Garment mask.** A shop garment uses its real mask from the dataset. An uploaded garment gets an estimated one: pixels near the background colour and connected to the image edge are background, everything else is garment, so light prints inside a garment survive.
-2. **Framing.** DM-VTON was trained on catalogue photos where the person fills the frame. On a photo with a lot of wall around the person it places the garment where it expects a torso, which puts it over the face. So a person clearly smaller than the frame, on a plain background, is cropped to catalogue framing first. Photos are padded, never stretched, because stretching changes body proportions in the output.
+2. **Framing.** DM-VTON was trained on catalogue photos where the person fills the frame. On a photo with a lot of wall around the person it places the garment where it expects a torso, which puts it over the face. So when there is clearly empty wall above a person on a plain background, the photo is cropped to catalogue framing first. The wall colour is estimated row by row from the photo's edges, so uneven lighting is not mistaken for the person. Every doubtful case is left uncropped, since a wrong crop is worse than none. Photos are padded, never stretched, because stretching changes body proportions in the output.
 3. **Inference** at the model's native 192 x 256, with the same preprocessing and `align_corners=True` as DM-VTON's official test script.
 
 ### Running without cupy
@@ -127,6 +127,17 @@ DM-VTON's warping module computes a correlation volume with a CUDA kernel compil
   | Correlation zeroed out | 0.810 |
 
   It is measured on the warp output rather than the final image because the generator can copy the garment from the input photo and hide a bad warp. The two broken variants are there to show how much the measurement can tell apart: this model leans only lightly on the correlation layer, so the end to end numbers support the implementation, and the exact-match test above is the decisive evidence.
+
+- **Framing leaves catalogue photos alone and crops people who stand back.** Across all 2,032 test photos, 3 were cropped, all loosely framed shots where the tighter crop does no harm. On the same people shrunk onto a noisy wall to 55% and 70% of the frame, with lighting gradients of up to 30 levels, 403 of 408 were cropped correctly. `tests/test_framing.py` holds both rates; it fails against the first version of the framing, which cropped a third of catalogue photos to the hips.
+
+Run the tests from `backend/`:
+
+```powershell
+pip install -r requirements-dev.txt
+python -m pytest feature_2_VITON_model/tests
+```
+
+The framing test needs the dataset and is skipped without it.
 
 ### Limitations
 
@@ -163,7 +174,7 @@ backend/
     dmvton_service.py              try-on service
     tryon_cli.py                   one try-on from the command line
     eval_warp_alignment.py         warp accuracy measurement
-    tests/                         correlation layer test
+    tests/                         correlation and framing tests
     DM-VTON/                       vendored model code
   feature_3_game/                  style game logic
 frontend/
