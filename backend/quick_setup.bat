@@ -1,22 +1,20 @@
 @echo off
-echo Quick setup for ezyZip backend...
+REM Creates the backend virtual environment and installs dependencies.
+cd /d "%~dp0"
 
-REM Activate virtual environment
+if not exist venv (
+    python -m venv venv
+)
 call venv\Scripts\activate.bat
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
-REM Install essential packages
-echo Installing essential packages...
-pip install fastapi==0.104.1
-pip install uvicorn[standard]==0.24.0
-pip install python-multipart==0.0.6
-pip install pydantic==2.5.0
-pip install python-dotenv==1.0.0
+if not exist .env copy .env.example .env >nul
 
 echo.
-echo Testing server startup...
-python -c "import main; print('✅ All imports successful!')"
+echo Checking the app imports and the try-on model...
+python -c "import main; print(main.tryon_service.status())"
 
 echo.
-echo Installation complete! You can now run:
-echo uvicorn main:app --reload
-pause 
+echo Done. Start the API with:  uvicorn main:app --reload --port 8000
+pause

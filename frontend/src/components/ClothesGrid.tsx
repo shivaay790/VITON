@@ -1,7 +1,10 @@
+import { API_BASE_URL } from '../config';
 import React, { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import Timer from './Timer';
-import { BACKEND_URL } from "../config";
+
+const BACKEND_URL = API_BASE_URL;
+
 interface ClothesGridProps {
   sessionId: string;
   players: string[];
@@ -38,7 +41,7 @@ const ClothesGrid: React.FC<ClothesGridProps> = ({ sessionId, players, currentPl
   useEffect(() => {
     if (timeExpired) {
       const submitCurrentPicks = async () => {
-        let finalPicks = { ...picks };
+        const finalPicks = { ...picks };
         if (Object.keys(finalPicks).length === 0) {
           otherPlayers.forEach(other => {
             const randomIndex = Math.floor(Math.random() * clothes.length);
@@ -133,7 +136,7 @@ const ClothesGrid: React.FC<ClothesGridProps> = ({ sessionId, players, currentPl
   };
 
   const handleSkip = async () => {
-    let finalPicks = { ...picks };
+    const finalPicks = { ...picks };
     otherPlayers.forEach(other => {
       if (!(other in finalPicks)) {
         const randomIndex = Math.floor(Math.random() * clothes.length);

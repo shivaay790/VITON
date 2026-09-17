@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { CartProvider } from './context/CartContext';
 import { Navigation } from './components/Navigation';
 import { Chatbot } from './components/Chatbot';
@@ -10,21 +10,7 @@ import { StyleGame } from './components/StyleGame';
 import { Cart } from './components/Cart';
 import { Product } from './types';
 import { api } from './utils/api';
-import { BACKEND_URL } from "./config";
-
-function filenameToProduct(filename: string): Product {
-  return {
-    id: filename,
-    title: filename, // or a nicer name if you want to parse it
-    image: `${BACKEND_URL}/clothes/${filename}`,
-    price: 0, // or any default/mock value
-    category: 'tops', // if you want
-    company: 'Dataset', // or any default
-    color: '', // optional
-    size: [], // add empty size array
-    // ...add other fields as needed
-  };
-}
+import { filenameToProduct } from './utils/productMetadata';
 
 function App() {
   const [activeTab, setActiveTab] = useState('shop');
@@ -39,8 +25,8 @@ function App() {
 
   // Listen for custom tab change events
   useEffect(() => {
-    const handleTabChange = (event: any) => {
-      setActiveTab(event.detail);
+    const handleTabChange = (event: Event) => {
+      setActiveTab((event as CustomEvent<string>).detail);
     };
 
     window.addEventListener('changeTab', handleTabChange);
@@ -68,7 +54,7 @@ function App() {
       case 'designer':
         return <DesignerStudio />;
       case 'game':
-        return <StyleGame products={products} />;
+        return <StyleGame />;
 
       case 'cart':
         return <Cart />;
@@ -81,6 +67,9 @@ function App() {
     <CartProvider>
       <div className="min-h-screen bg-gray-50">
         <div className="bg-blue-100 text-blue-800 px-4 py-2 text-sm">Backend status: {backendStatus}</div>
+        <div className="bg-amber-100 text-amber-900 px-4 py-2 text-sm font-medium border-b border-amber-200">
+          Demonstration only: this is not an actual clothing e-commerce site. It is for an ML project demo.
+        </div>
         <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
         <main className="pb-8">
           {renderActiveTab()}

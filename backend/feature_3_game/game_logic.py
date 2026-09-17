@@ -1,13 +1,12 @@
 import os
 import random
-from PIL import Image
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import uuid
 
 # In-memory game state storage
 GAMES: Dict[str, Dict[str, Any]] = {}
 
-CLOTHES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'clothes_tryon_dataset', 'train', 'cloth'))
+from paths import CLOTHES_DIR, PEOPLE_DIR
 
 
 def init_game(num_players: int, num_rounds: int, timer: int, n_clothes: int = 10) -> str:
@@ -17,8 +16,6 @@ def init_game(num_players: int, num_rounds: int, timer: int, n_clothes: int = 10
     session_id = str(uuid.uuid4())
     
     # Use actual dataset player names that correspond to image files
-    PEOPLE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'clothes_tryon_dataset', 'train', 'image'))
-    
     print(f"[init_game] Requested {num_players} players")
     
     if not os.path.exists(PEOPLE_DIR):
@@ -31,8 +28,14 @@ def init_game(num_players: int, num_rounds: int, timer: int, n_clothes: int = 10
         all_people = [f.replace('.jpg', '') for f in os.listdir(PEOPLE_DIR) if f.endswith('.jpg')]
         print(f"[init_game] Found {len(all_people)} people in dataset")
         
-        # Use fixed players for consistency with frontend expectations
-        fixed_players = ['00002_00', '14684_00', '00154_00', '00001_00', '00003_00', '00004_00', '00005_00', '00006_00', '00007_00', '00008_00']
+        # Use fixed players for consistency with frontend expectations.
+        # Only those with a photo in this dataset: 00004_00, 00006_00 and 00008_00
+        # are not in the VITON-HD train split, and a player without a photo
+        # cannot be dressed. Any shortfall is topped up from the dataset below.
+        fixed_players = [
+            p for p in ['00002_00', '14684_00', '00154_00', '00001_00', '00003_00', '00004_00', '00005_00', '00006_00', '00007_00', '00008_00']
+            if p in all_people
+        ]
         
         # Ensure we have enough players
         if num_players <= len(fixed_players):

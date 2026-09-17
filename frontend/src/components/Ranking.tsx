@@ -1,6 +1,9 @@
+import { API_BASE_URL } from '../config';
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { BACKEND_URL } from "../config";
+
+const BACKEND_URL = API_BASE_URL;
+
 interface VitonResult {
   player: string;
   cloth: string;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Filter, X } from 'lucide-react';
 import { categories, companies, colors } from '../data/constants';
 
@@ -11,7 +10,7 @@ interface FilterSidebarProps {
     company: string;
     priceMax: number;
   };
-  onFilterChange: (key: string, value: any) => void;
+  onFilterChange: (key: string, value: string | number) => void;
   onClearFilters: () => void;
   onApplyFilters: () => void;
 }
@@ -153,7 +152,7 @@ export function FilterSidebar({ isOpen, onClose, filters, onFilterChange, onClea
               <input
                 type="range"
                 min="0"
-                max="200"
+                max="2000"
                 value={filters.priceMax}
                 onChange={(e) => onFilterChange('priceMax', parseInt(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
@@ -161,7 +160,7 @@ export function FilterSidebar({ isOpen, onClose, filters, onFilterChange, onClea
               <div className="flex justify-between text-sm text-gray-500 mt-1">
                 <span>$0</span>
                 <span>${filters.priceMax}</span>
-                <span>$200+</span>
+                <span>$2000</span>
               </div>
             </div>
           </div>

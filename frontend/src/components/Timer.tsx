@@ -20,7 +20,7 @@ const Timer: React.FC<TimerProps> = ({ seconds, onExpire, playerKey }) => {
       setTimeLeft((t) => {
         if (t <= 1) {
           clearInterval(interval);
-          onExpire && onExpire();
+          onExpire?.();
           return 0;
         }
         return t - 1;

@@ -3,7 +3,6 @@ export const companies = [
 ];
 
 export const categories = [
-  { value: 'tops', label: 'All Tops' },
   { value: 'tshirts', label: 'T-Shirts' },
   { value: 'shirts', label: 'Shirts' },
   { value: 'hoodies', label: 'Hoodies' },

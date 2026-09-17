@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 
+interface DetailedLeaderboard {
+  leaderboard: Record<string, number>;
+  round_scores: Record<string, Record<string, number>>;
+  num_rounds: number;
+}
+
 interface LeaderboardProps {
   sessionId: string | null;
 }
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ sessionId }) => {
-  const [leaderboardData, setLeaderboardData] = useState<any>(null);
+  const [leaderboardData, setLeaderboardData] = useState<DetailedLeaderboard | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,7 +23,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ sessionId }) => {
         setLeaderboardData(data);
         setLoading(false);
       })
-      .catch(err => {
+      .catch(() => {
         setLoading(false);
       });
   }, [sessionId]);
@@ -25,7 +31,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ sessionId }) => {
   if (loading) return <div>Loading leaderboard...</div>;
   if (!leaderboardData) return <div>Failed to load leaderboard</div>;
 
-  const { leaderboard, round_scores, players, num_rounds } = leaderboardData;
+  const { leaderboard, round_scores, num_rounds } = leaderboardData;
   const sortedPlayers = Object.entries(leaderboard)
     .sort(([,a], [,b]) => b - a)
     .map(([player]) => player);

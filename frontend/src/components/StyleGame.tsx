@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Clock, Trophy, Users, Play, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
-import { GameSession, GamePlayer, Product } from '../types';
+import { API_BASE_URL } from '../config';
+import { useState, useEffect } from 'react';
+import { Play } from 'lucide-react';
 import { api } from '../utils/api';
-import Timer from './Timer';
 import ClothesGrid from './ClothesGrid';
 import Ranking from './Ranking';
 import Leaderboard from './Leaderboard';
-import { BACKEND_URL } from "../config";
+
+const BACKEND_URL = API_BASE_URL;
+
 // Fixed players for the VITON game (now handled by backend)
 // const FIXED_PLAYERS = ['00002_00', '14684_00', '00154_00'];
 
@@ -19,7 +20,7 @@ interface VitonResult {
   pickedBy?: string; // Who picked this combination
 }
 
-export function StyleGame({ products }: { products: Product[] }) {
+export function StyleGame() {
   // --- State ---
   const [phase, setPhase] = useState<'lobby' | 'pick' | 'waiting' | 'rank' | 'leaderboard' | 'gameover'>('lobby');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -30,8 +31,9 @@ export function StyleGame({ products }: { products: Product[] }) {
   const [timer, setTimer] = useState(60);
   const [currentPickerIdx, setCurrentPickerIdx] = useState(0);
   const [currentRankerIdx, setCurrentRankerIdx] = useState(0);
-  const [allPicks, setAllPicks] = useState<any>({});
-  const [leaderboardKey, setLeaderboardKey] = useState(0);
+  // {picker: {recipient: cloth index}}
+  const [allPicks, setAllPicks] = useState<Record<string, Record<string, number>>>({});
+  const [leaderboardKey] = useState(0);
   const [setupData, setSetupData] = useState({
     num_players: 3, // Default to 3 players
     num_rounds: 1,
@@ -53,15 +55,10 @@ export function StyleGame({ products }: { products: Product[] }) {
     }
   }, [processingQueue, isProcessing]);
 
-  // --- Helper function to get VITON result for a player-cloth combination ---
-  const getVitonResult = (player: string, cloth: string): VitonResult | null => {
-    return vitonResults.find(result => result.player === player && result.cloth === cloth) || null;
-  };
-
-  const handlePicksComplete = (playerPicks: any) => {
+  const handlePicksComplete = (playerPicks: Record<string, number>) => {
     console.log("Picks received:", playerPicks);
   
-    setAllPicks((prev: any) => ({
+    setAllPicks((prev) => ({
       ...prev,
       [players[currentPickerIdx]]: playerPicks
     }));
@@ -106,7 +103,8 @@ export function StyleGame({ products }: { products: Product[] }) {
 
       // Process VITON
       console.log(`Calling VITON API with person: ${personImageFile.name}, cloth: ${clothImageFile.name}`);
-      const resultImageUrl = await api.tryOn(personImageFile, clothImageFile);
+      // Passing the cloth filename lets the backend use the dataset's real garment mask.
+      const resultImageUrl = await api.tryOn(personImageFile, clothImageFile, nextItem.cloth);
       console.log(`VITON API returned result URL: ${resultImageUrl}`);
       
       // Update result with completed status
@@ -119,7 +117,7 @@ export function StyleGame({ products }: { products: Product[] }) {
       setVitonResults(prev => [...prev, completedResult]);
       console.log('VITON result completed:', completedResult);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('VITON processing error:', err);
       const errorResult: VitonResult = {
         ...nextItem,
@@ -168,8 +166,8 @@ export function StyleGame({ products }: { products: Product[] }) {
       // Initialize VITON processing
       setVitonResults([]);
       setProcessingQueue([]);
-    } catch (err: any) {
-      setError('Failed to start game: ' + err.message);
+    } catch (err) {
+      setError('Failed to start game: ' + (err instanceof Error ? err.message : String(err)));
     }
     setLoading(false);
   };

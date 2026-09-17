@@ -1,30 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { Product } from '../types';
 import { api } from '../utils/api';
 import { ProductTile } from './ProductTile';
 import { FilterSidebar } from './FilterSidebar';
-import { BACKEND_URL } from "../config";
 
 interface ShopProps {
   onTryOn: (product: Product) => void;
-}
-
-function filenameToProduct(filename: string): Product {
-  let brand = 'Dataset';
-  if (filename.toLowerCase().includes('adidas')) brand = 'Adidas';
-  // Add more brand detection logic as needed
-
-  return {
-    id: filename,
-    title: filename,
-    image: `${BACKEND_URL}/clothes/${filename}`,
-    price: 0,
-    category: 'tops',
-    company: brand,
-    color: '',
-    size: ['M'],
-  };
 }
 
 export function Shop({ onTryOn, products, setProducts }: ShopProps & { products: Product[], setProducts: (products: Product[]) => void }) {
@@ -37,17 +19,17 @@ export function Shop({ onTryOn, products, setProducts }: ShopProps & { products:
     category: '',
     color: '',
     company: '',
-    priceMax: 200
+    priceMax: 2000
   });
-  const [filters, setFilters] = useState({
+  const [, setFilters] = useState({
     category: '',
     color: '',
     company: '',
-    priceMax: 200
+    priceMax: 2000
   });
 
   // Handle filter sidebar changes (update pendingFilters only)
-  const handlePendingFilterChange = (key: string, value: any) => {
+  const handlePendingFilterChange = (key: string, value: string | number) => {
     setPendingFilters(prev => ({ ...prev, [key]: value }));
   };
 
@@ -59,9 +41,10 @@ export function Shop({ onTryOn, products, setProducts }: ShopProps & { products:
       const results = await api.searchClothes({
         category: pendingFilters.category,
         company: pendingFilters.company,
-        color: pendingFilters.color
+        color: pendingFilters.color,
+        priceMax: pendingFilters.priceMax
       });
-      setProducts(results.map(filenameToProduct));
+      setProducts(results);
     } catch (error) {
       console.error('Filter error:', error);
     }
@@ -71,7 +54,7 @@ export function Shop({ onTryOn, products, setProducts }: ShopProps & { products:
   const fetchAllProducts = async () => {
     try {
       const results = await api.searchClothes({});
-      setProducts(results.map(filenameToProduct));
+      setProducts(results);
     } catch (error) {
       console.error('Fetch all products error:', error);
     }
@@ -79,8 +62,8 @@ export function Shop({ onTryOn, products, setProducts }: ShopProps & { products:
 
   // Modified handleClearFilters to reset everything and fetch all products
   const handleClearFilters = async () => {
-    setPendingFilters({ category: '', color: '', company: '', priceMax: 200 });
-    setFilters({ category: '', color: '', company: '', priceMax: 200 });
+    setPendingFilters({ category: '', color: '', company: '', priceMax: 2000 });
+    setFilters({ category: '', color: '', company: '', priceMax: 2000 });
     setSearchQuery('');
     await fetchAllProducts();
   };
@@ -88,8 +71,8 @@ export function Shop({ onTryOn, products, setProducts }: ShopProps & { products:
   // Modified handleClearSearch to reset everything and fetch all products
   const handleClearSearch = async () => {
     setSearchQuery('');
-    setPendingFilters({ category: '', color: '', company: '', priceMax: 200 });
-    setFilters({ category: '', color: '', company: '', priceMax: 200 });
+    setPendingFilters({ category: '', color: '', company: '', priceMax: 2000 });
+    setFilters({ category: '', color: '', company: '', priceMax: 2000 });
     await fetchAllProducts();
   };
 
@@ -97,11 +80,11 @@ export function Shop({ onTryOn, products, setProducts }: ShopProps & { products:
   const handleSearch = async (inputQuery?: string) => {
     const queryToUse = inputQuery !== undefined ? inputQuery : searchQuery;
     setSearchQuery(queryToUse);
-    setPendingFilters({ category: '', color: '', company: '', priceMax: 200 });
-    setFilters({ category: '', color: '', company: '', priceMax: 200 });
+    setPendingFilters({ category: '', color: '', company: '', priceMax: 2000 });
+    setFilters({ category: '', color: '', company: '', priceMax: 2000 });
     try {
       const results = await api.searchClothes({ query: queryToUse });
-      setProducts(results.map(filenameToProduct));
+      setProducts(results);
     } catch (error) {
       console.error('Search error:', error);
     }

@@ -1,49 +1,19 @@
-# Web Framework
+# Web API
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
-starlette==0.27.0
-
-# Data Models and Validation
 pydantic==2.5.0
-
-# Machine Learning and AI
-torch==2.1.1
-torchvision==0.16.1
-transformers==4.36.2
-torchgeometry==0.1.2
-
-# Computer Vision
-Pillow==10.1.0
-opencv-python==4.8.1.78
-
-# Vector Database
-pinecone-client==2.2.4
-
-# Environment and Configuration
 python-dotenv==1.0.0
 
-# Data Processing
+# Virtual try-on (DM-VTON) and image handling.
+# This installs the CPU build of PyTorch, which is enough: a try-on takes about
+# a second. For an NVIDIA GPU install the CUDA build first, see the README.
+torch==2.1.1
 numpy==1.24.3
 scipy==1.11.4
+Pillow==10.1.0
 
-# Utilities
-uuid==1.30
-
-# AlphaPose Dependencies
-six==1.16.0
-terminaltables==3.1.10
-matplotlib==3.8.2
-visdom==0.2.4
-tqdm==4.66.1
-tensorboardx==2.6.2
-easydict==1.9
-pyyaml==6.0.1
-halpecocotools==0.0.1
-munkres==1.1.4
-timm==0.1.20
-natsort==8.4.0
-cython==3.0.6
-
-# Additional ML dependencies
-accelerate==0.25.0
+# Semantic shop search. Optional at runtime: without a PINECONE_API_KEY the shop
+# falls back to metadata filtering and FashionCLIP is never downloaded.
+transformers==4.36.2
+pinecone==8.1.0
